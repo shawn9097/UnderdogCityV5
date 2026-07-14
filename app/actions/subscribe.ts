@@ -14,11 +14,10 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
  * The single email-capture path for every form on the site.
  *
  * 1. Always writes the email to Supabase (public.signups) so no signup is
- *    ever lost — even before Beehiiv is configured.
- * 2. Forwards to Beehiiv when BEEHIIV_API_KEY + BEEHIIV_PUB_ID are set.
- *    TODO(shawn): add both env vars in Vercel to activate Beehiiv.
- *    Double opt-in is requested per-subscription below; confirm it is also
- *    enabled in the Beehiiv publication settings.
+ *    ever lost.
+ * 2. Forwards to Beehiiv (double opt-in) when BEEHIIV_API_KEY + BEEHIIV_PUB_ID
+ *    are set. Both are configured in the Vercel project env; the confirmation
+ *    email is sent by Beehiiv on subscribe.
  */
 export async function subscribe(
   _prev: SubscribeState,
@@ -41,16 +40,9 @@ export async function subscribe(
     stored = true;
   }
 
-  const beehiiv = await forwardToBeehiiv(email, source);
+  const beehiivOk = await forwardToBeehiiv(email, source);
 
-  // TEMP DIAGNOSTIC: a `source=diag` submission returns the Beehiiv outcome
-  // directly in the response (no secrets) so it can be verified without
-  // relying on log ingestion. Remove once Beehiiv is confirmed working.
-  if (source === 'diag') {
-    return { status: 'success', message: `DIAG :: ${beehiiv.detail}` };
-  }
-
-  if (stored || beehiiv.ok) {
+  if (stored || beehiivOk) {
     return { status: 'success', message: SUBSCRIBE_SUCCESS };
   }
   return {
@@ -59,17 +51,10 @@ export async function subscribe(
   };
 }
 
-type BeehiivResult = { ok: boolean; detail: string };
-
-async function forwardToBeehiiv(email: string, source: string): Promise<BeehiivResult> {
+async function forwardToBeehiiv(email: string, source: string): Promise<boolean> {
   const apiKey = process.env.BEEHIIV_API_KEY;
   const pubId = process.env.BEEHIIV_PUB_ID;
-  if (!apiKey || !pubId) {
-    return {
-      ok: false,
-      detail: `env-missing hasKey=${!!apiKey} hasPub=${!!pubId} pubPrefix=${pubId ? pubId.slice(0, 4) : 'n/a'}`,
-    };
-  }
+  if (!apiKey || !pubId) return false;
 
   try {
     const res = await fetch(
@@ -90,12 +75,8 @@ async function forwardToBeehiiv(email: string, source: string): Promise<BeehiivR
         }),
       },
     );
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      return { ok: false, detail: `http-${res.status} keyLen=${apiKey.length} pubPrefix=${pubId.slice(0, 4)} body=${body.slice(0, 200)}` };
-    }
-    return { ok: true, detail: `ok-${res.status}` };
-  } catch (e) {
-    return { ok: false, detail: `fetch-error ${(e as Error).message}` };
+    return res.ok;
+  } catch {
+    return false;
   }
 }
