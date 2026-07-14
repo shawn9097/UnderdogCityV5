@@ -55,7 +55,16 @@ export async function subscribe(
 async function forwardToBeehiiv(email: string, source: string): Promise<boolean> {
   const apiKey = process.env.BEEHIIV_API_KEY;
   const pubId = process.env.BEEHIIV_PUB_ID;
-  if (!apiKey || !pubId) return false; // TODO(shawn): set BEEHIIV_API_KEY + BEEHIIV_PUB_ID
+  if (!apiKey || !pubId) {
+    // TEMP DIAGNOSTIC (no secrets): are the env vars even present, and is the
+    // pub id shaped like pub_...? Remove once Beehiiv is confirmed working.
+    console.warn('[beehiiv] skipped: env missing', {
+      hasApiKey: !!apiKey,
+      hasPubId: !!pubId,
+      pubIdPrefix: pubId ? pubId.slice(0, 4) : null,
+    });
+    return false;
+  }
 
   try {
     const res = await fetch(
@@ -76,8 +85,14 @@ async function forwardToBeehiiv(email: string, source: string): Promise<boolean>
         }),
       },
     );
+    if (!res.ok) {
+      // TEMP DIAGNOSTIC (no secrets): surface Beehiiv's rejection reason.
+      const body = await res.text().catch(() => '');
+      console.warn('[beehiiv] rejected', res.status, body.slice(0, 300));
+    }
     return res.ok;
-  } catch {
+  } catch (e) {
+    console.warn('[beehiiv] fetch error', (e as Error).message);
     return false;
   }
 }
