@@ -41,9 +41,16 @@ export async function subscribe(
     stored = true;
   }
 
-  const beehiivOk = await forwardToBeehiiv(email, source);
+  const beehiiv = await forwardToBeehiiv(email, source);
 
-  if (stored || beehiivOk) {
+  // TEMP DIAGNOSTIC: a `source=diag` submission returns the Beehiiv outcome
+  // directly in the response (no secrets) so it can be verified without
+  // relying on log ingestion. Remove once Beehiiv is confirmed working.
+  if (source === 'diag') {
+    return { status: 'success', message: `DIAG :: ${beehiiv.detail}` };
+  }
+
+  if (stored || beehiiv.ok) {
     return { status: 'success', message: SUBSCRIBE_SUCCESS };
   }
   return {
@@ -52,18 +59,16 @@ export async function subscribe(
   };
 }
 
-async function forwardToBeehiiv(email: string, source: string): Promise<boolean> {
+type BeehiivResult = { ok: boolean; detail: string };
+
+async function forwardToBeehiiv(email: string, source: string): Promise<BeehiivResult> {
   const apiKey = process.env.BEEHIIV_API_KEY;
   const pubId = process.env.BEEHIIV_PUB_ID;
   if (!apiKey || !pubId) {
-    // TEMP DIAGNOSTIC (no secrets): are the env vars even present, and is the
-    // pub id shaped like pub_...? Remove once Beehiiv is confirmed working.
-    console.warn('[beehiiv] skipped: env missing', {
-      hasApiKey: !!apiKey,
-      hasPubId: !!pubId,
-      pubIdPrefix: pubId ? pubId.slice(0, 4) : null,
-    });
-    return false;
+    return {
+      ok: false,
+      detail: `env-missing hasKey=${!!apiKey} hasPub=${!!pubId} pubPrefix=${pubId ? pubId.slice(0, 4) : 'n/a'}`,
+    };
   }
 
   try {
@@ -86,13 +91,11 @@ async function forwardToBeehiiv(email: string, source: string): Promise<boolean>
       },
     );
     if (!res.ok) {
-      // TEMP DIAGNOSTIC (no secrets): surface Beehiiv's rejection reason.
       const body = await res.text().catch(() => '');
-      console.warn('[beehiiv] rejected', res.status, body.slice(0, 300));
+      return { ok: false, detail: `http-${res.status} keyLen=${apiKey.length} pubPrefix=${pubId.slice(0, 4)} body=${body.slice(0, 200)}` };
     }
-    return res.ok;
+    return { ok: true, detail: `ok-${res.status}` };
   } catch (e) {
-    console.warn('[beehiiv] fetch error', (e as Error).message);
-    return false;
+    return { ok: false, detail: `fetch-error ${(e as Error).message}` };
   }
 }
