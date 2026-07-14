@@ -46,11 +46,11 @@ export default function ThreeDoors() {
                 aria-hidden="true"
                 className="mt-5 h-px w-12 bg-gold/50 transition-colors duration-300 group-hover:bg-gold-bright/70"
               />
-              <p className="mt-5 font-body text-sm leading-relaxed text-bone-muted">
+              <p className="mt-5 font-body text-[17px] leading-relaxed text-bone-muted">
                 {door.desc}
               </p>
               {door.teaser && (
-                <p className="mt-4 font-body text-sm italic leading-relaxed text-bone/80">
+                <p className="mt-4 font-body text-[17px] italic leading-relaxed text-bone/80">
                   {door.teaser}
                 </p>
               )}
