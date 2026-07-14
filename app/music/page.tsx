@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Countdown from '@/components/Countdown';
 import ClaimKeyForm from '@/components/ClaimKeyForm';
 import GoldButton from '@/components/GoldButton';
 import SectionHeading from '@/components/SectionHeading';
-import KintsugiVeins from '@/components/KintsugiVeins';
 import Reveal from '@/components/Reveal';
-import { CrownMark } from '@/components/EngravedRule';
 import {
   ALBUM_TITLE,
   MUSIC_TENANT_LINE,
@@ -35,26 +34,21 @@ export default function MusicPage() {
       <SectionHeading eyebrow="The Music" title="The Vault" />
 
       <div className="mt-16 grid gap-12 md:grid-cols-[minmax(0,340px)_1fr] md:gap-14">
-        {/* Album panel */}
+        {/* Album panel — final artwork, double-framed in tarnished gold */}
         <Reveal>
           <div className="border border-gold/40 bg-charcoal p-2">
-            {/* <!-- ALBUM ART HERE --> TODO(shawn): replace this engraved
-                placeholder panel with the final album artwork via next/image. */}
-            <div className="relative flex aspect-square flex-col items-center justify-center border border-gold/25 px-6 text-center">
-              <KintsugiVeins className="pointer-events-none absolute inset-x-0 top-6 h-16 w-full opacity-50" />
-              <CrownMark className="h-6 w-10 text-gold" />
-              <p className="engraved mt-6 font-display text-2xl uppercase leading-snug tracking-engraved text-gold-bright">
-                Throne
-                <br />
-                at the
-                <br />
-                Bottom
-              </p>
-              <p className="mt-6 font-display text-[10px] uppercase tracking-monument text-bone-muted">
-                Debut album · {RELEASE_DATE_DISPLAY}
-              </p>
-              <KintsugiVeins flip className="pointer-events-none absolute inset-x-0 bottom-6 h-14 w-full opacity-40" />
+            <div className="relative aspect-square border border-gold/25">
+              <Image
+                src="/album-cover.jpg"
+                alt={`${ALBUM_TITLE} — Underdog City album cover: a gothic throne of broken gold and a kintsugi crown in a ruined cathedral`}
+                fill
+                sizes="(min-width: 768px) 340px, 100vw"
+                className="object-cover"
+              />
             </div>
+            <p className="mt-3 text-center font-display text-[10px] uppercase tracking-monument text-bone-muted">
+              Debut album · {RELEASE_DATE_DISPLAY}
+            </p>
           </div>
         </Reveal>
 
