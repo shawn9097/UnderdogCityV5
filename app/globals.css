@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  DESIGN LAW tokens — the only colors on the site.
+  Gold reads tarnished and metallic, never neon or highlighter.
+*/
+:root {
+  --void: #0a0a0b;
+  --charcoal: #151310;
+  --gold: #a8772e;
+  --gold-bright: #c9a227;
+  --gold-glow: #e8b84b;
+  --bone: #e3dccb;
+  --bone-muted: #a9a192;
+  --crimson: #6e1414;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background-color: var(--void);
+  color: var(--bone);
+}
+
+::selection {
+  background-color: var(--gold);
+  color: var(--void);
+}
+
+/* Keep every placeholder on-brand (overrides Tailwind preflight's gray) */
+input::placeholder,
+textarea::placeholder {
+  color: var(--bone-muted);
+  opacity: 0.8;
+}
+
+/* Focus: gilded, visible, WCAG-friendly */
+:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
+}
+
+/*
+  Grain — a faint film of dust over the whole painting.
+  Pure SVG turbulence, no external asset, fixed and inert.
+*/
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Engraved display text — carved into stone, lit faintly from above */
+.engraved {
+  text-shadow:
+    0 1px 0 rgba(21, 19, 16, 0.9),
+    0 -1px 0 rgba(232, 184, 75, 0.12);
+}
+
+/* A thin double rule, like a chisel line in a reliquary panel */
+.rule-engraved {
+  border-top: 1px solid var(--gold);
+  box-shadow: 0 1px 0 rgba(10, 10, 11, 0.9), 0 2px 0 rgba(168, 119, 46, 0.25);
+}
+
+/* Slow candlelit pulse for primary CTAs — ambient, never flashing */
+@keyframes gold-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--gold), 0 0 18px 0 rgba(232, 184, 75, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--gold-bright), 0 0 26px 2px rgba(232, 184, 75, 0.22);
+  }
+}
+
+.cta-pulse {
+  animation: gold-pulse 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-pulse {
+    animation: none;
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+}
+
+/* Reading view — a page from the serial, not a webpage */
+.reading {
+  font-size: 19px;
+  line-height: 1.8;
+  max-width: 68ch;
+}
